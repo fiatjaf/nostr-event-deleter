@@ -5,37 +5,15 @@
     type EventPointer,
     type AddressPointer
   } from 'nostr-tools/nip19'
-  import {Relay} from 'nostr-tools/relay'
   import {SimplePool} from 'nostr-tools/pool'
 
-  import {allRelays} from '../allrelays.js'
+  import {commonRelays, metadataRelays, allRelays} from '../relays.js'
 
   let pool = new SimplePool()
   let id: string | null = null
   let a: string | null = null
   let relayGroups: [string, string[], null | (() => void)][] = [
-    [
-      'common',
-      [
-        'wss://relay.nostr.band',
-        'wss://nostr-pub.wellorder.net',
-        'wss://offchain.pub',
-        'wss://relay.damus.io',
-        'wss://purplepag.es',
-        'wss://nos.lol',
-        'wss://relay.nostr.bg',
-        'wss://relay.nos.social',
-        'wss://nostr.mom',
-        'wss://nostr.wine',
-        'wss://relayable.org',
-        'wss://relay.mostr.pub',
-        'wss://eden.nostr.land',
-        'wss://atlas.nostr.land',
-        'wss://relay.current.fyi',
-        'wss://nostr.fmt.wiz.biz'
-      ],
-      null
-    ],
+    ['common', commonRelays, null],
     ['hints', [], null],
     ['kind10002', [], fetchKind10002Relays],
     ['kind3', [], fetchKind3Relay],
@@ -116,14 +94,10 @@
 
   async function fetchKind10002Relays() {
     let pubkey = await (window as any).nostr.getPublicKey()
-    let res = await pool.querySync(
-      [
-        'wss://purplepag.es',
-        'wss://relay.nostr.band',
-        'wss://relay.nos.social'
-      ],
-      {kinds: [10002], authors: [pubkey]}
-    )
+    let res = await pool.querySync(metadataRelays, {
+      kinds: [10002],
+      authors: [pubkey]
+    })
     res.forEach(evt => {
       evt.tags.forEach((tag: string[]) => {
         if (tag[0] === 'r' && tag[1]?.length) {
@@ -136,14 +110,10 @@
 
   async function fetchKind3Relay() {
     let pubkey = await (window as any).nostr.getPublicKey()
-    let res = await pool.querySync(
-      [
-        'wss://purplepag.es',
-        'wss://relay.nostr.band',
-        'wss://relay.nos.social'
-      ],
-      {kinds: [3], authors: [pubkey]}
-    )
+    let res = await pool.querySync(metadataRelays, {
+      kinds: [3],
+      authors: [pubkey]
+    })
     res.forEach(evt => {
       try {
         relayGroups[3][1].push(...Object.keys(JSON.parse(evt.content)))

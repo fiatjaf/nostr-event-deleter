@@ -1,3 +1,33 @@
+export const metadataRelays = [
+  'wss://purplepag.es',
+  'wss://relay.nostr.band',
+  'wss://relay.nos.social',
+  'wss://relay.noswhere.com',
+  'wss://relay.primal.net',
+  'wss://relay.damus.io'
+]
+
+export const commonRelays = [
+  'wss://relay.nostr.band',
+  'wss://nostr-pub.wellorder.net',
+  'wss://offchain.pub',
+  'wss://relay.damus.io',
+  'wss://purplepag.es',
+  'wss://nos.lol',
+  'wss://relay.nostr.bg',
+  'wss://relay.nos.social',
+  'wss://nostr.mom',
+  'wss://nostr.wine',
+  'wss://relayable.org',
+  'wss://nostr21.com',
+  'wss://relay.mostr.pub',
+  'wss://eden.nostr.land',
+  'wss://atlas.nostr.land',
+  'wss://relay.current.fyi',
+  'wss://nostr.fmt.wiz.biz',
+  'wss://relay.primal.net'
+]
+
 export const allRelays = [
   'wss://nostr-pub.wellorder.net',
   'wss://nostr.mom',
