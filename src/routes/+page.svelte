@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type {Event} from 'nostr-tools/pure'
+  import type {Event, EventTemplate} from 'nostr-tools/pure'
   import {
     decode,
     type EventPointer,
@@ -23,7 +23,7 @@
   let tryingFetching: {[index: number]: boolean} = {}
   let triedFetching: {[index: number]: boolean} = {}
   let tried: {[url: string]: boolean} = {}
-  let statuses: {[url: string]: boolean} = {}
+  let statuses: {[url: string]: boolean | string} = {}
 
   $: validId = id && id.match(/^[0-9a-f]{64}$/)
 
@@ -60,7 +60,7 @@
   }
 
   async function handleDelete(r: number) {
-    let deleteEvent: Event = {
+    let deleteEvent: EventTemplate = {
       content: '',
       created_at: Math.round(Date.now() / 1000),
       tags: [],
@@ -68,12 +68,14 @@
     }
 
     if (validId) {
-      deleteEvent.tags.push(['e', id])
+      deleteEvent.tags.push(['e', id as string])
     } else if (a) {
       deleteEvent.tags.push(['a', a])
     } else return
 
-    deleteEvent = await (window as any).nostr.signEvent(deleteEvent)
+    let signedDeleteEvent: Event = await (window as any).nostr.signEvent(
+      deleteEvent
+    )
 
     for (let u = 0; u < relayGroups[r][1].length; u++) {
       let url = relayGroups[r][1][u]
@@ -82,12 +84,14 @@
       tried[url] = true
       try {
         await Promise.race([
-          pool.ensureRelay(url).then(relay => relay.publish(deleteEvent)),
-          new Promise((_, reject) => setTimeout(reject, 2000))
+          pool.ensureRelay(url).then(relay => relay.publish(signedDeleteEvent)),
+          new Promise((_, reject) =>
+            setTimeout(() => reject('timed out'), 3000)
+          )
         ])
         statuses[url] = true
       } catch (err) {
-        statuses[url] = false
+        statuses[url] = err?.message ?? false
       }
     }
   }
@@ -172,10 +176,14 @@
                 <li class="flex items-center">
                   <span
                     class:text-green-500={statuses[url] === true}
-                    class:text-red-500={statuses[url] === false}
+                    class:text-red-500={statuses[url] === false ||
+                      typeof statuses[url] === 'string'}
                     class:text-yellow-600={statuses[url] === undefined &&
                       tried[url] === true}
                     class="text-4xl mr-2"
+                    title={typeof statuses[url] === 'string'
+                      ? statuses[url]
+                      : undefined}
                   >
                     •
                   </span>
