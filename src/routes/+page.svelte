@@ -173,21 +173,27 @@
             </div>
             <ul>
               {#each rg[1] as url}
-                <li class="flex items-center">
-                  <span
-                    class:text-green-500={statuses[url] === true}
-                    class:text-red-500={statuses[url] === false ||
-                      typeof statuses[url] === 'string'}
-                    class:text-yellow-600={statuses[url] === undefined &&
-                      tried[url] === true}
-                    class="text-4xl mr-2"
-                    title={typeof statuses[url] === 'string'
-                      ? statuses[url]
-                      : undefined}
-                  >
-                    •
-                  </span>
-                  {url.replace('wss://', '')}
+                <li class="group">
+                  <div class="flex items-center">
+                    <span
+                      class:text-green-500={statuses[url] === true}
+                      class:text-red-500={statuses[url] === false ||
+                        typeof statuses[url] === 'string'}
+                      class:text-yellow-600={statuses[url] === undefined &&
+                        tried[url] === true}
+                      class="text-4xl mr-2"
+                    >
+                      •
+                    </span>
+                    {url.replace('wss://', '')}
+                  </div>
+                  {#if typeof statuses[url] === 'string'}
+                    <div
+                      class="hidden group-hover:block text-xs text-amber-700"
+                    >
+                      {statuses[url]}
+                    </div>
+                  {/if}
                 </li>
               {/each}
             </ul>
