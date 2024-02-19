@@ -25,7 +25,8 @@ export const commonRelays = [
   'wss://atlas.nostr.land',
   'wss://relay.current.fyi',
   'wss://nostr.fmt.wiz.biz',
-  'wss://relay.primal.net'
+  'wss://relay.primal.net',
+  'wss://njump.me',
 ]
 
 export const allRelays = [
