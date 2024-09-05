@@ -7,7 +7,11 @@
   } from 'nostr-tools/nip19'
   import {SimplePool} from 'nostr-tools/pool'
 
-  import {commonRelays, metadataRelays, allRelays} from '../relays.js'
+  import {commonRelays, metadataRelays} from '../relays.js'
+
+  import {getOnlineRelays} from '../online-relays.js' 
+
+  import {relaysFound} from '../stores/relays-found';
 
   let pool = new SimplePool()
   let id: string | null = null
@@ -18,7 +22,7 @@
     ['kind10002', [], fetchKind10002Relays],
     ['kind3', [], fetchKind3Relay],
     ['extension', [], fetchExtensionRelays],
-    ['all known', [], fetchAllRelays]
+    ['all relays', [], fetchAllRelays]
   ]
   let tryingFetching: {[index: number]: boolean} = {}
   let triedFetching: {[index: number]: boolean} = {}
@@ -133,7 +137,8 @@
   }
 
   async function fetchAllRelays() {
-    relayGroups[5][1] = allRelays
+    relayGroups[5][1] = await getOnlineRelays()
+    tryingFetching[5] = false
   }
 </script>
 
@@ -160,6 +165,10 @@
                     })
                   }}>load</button
                 >
+              {:else if tryingFetching[r]}
+                <span class="my-2 px-2 py-1 rounded">
+                  {$relaysFound}
+                </span>
               {:else if rg[1].length}
                 <button
                   class={'my-2 px-2 py-1 rounded text-white ' +
