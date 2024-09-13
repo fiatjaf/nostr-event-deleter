@@ -29,18 +29,20 @@ export const getOnlineRelays = async () => {
   console.log('loading online relays...')
   
   for await (const ev of postIter) {
-    let url 
+    let url, urlStr 
     try {
       const val = ev.tags.find( t => t[0] === 'd')?.[1]
-      url = new URL(val).toString()
+      url = new URL(val)
+      urlStr = url.toString()
     }
     catch(e){
       console.log('invalid url', ev.tags.find( t => t[0] === 'd'))
       continue;
     }
-    if(onlineRelays.has(url)) continue;
+    if(url.protocol !== 'wss:') continue; // only allow wss
+    if(onlineRelays.has(urlStr)) continue;
+    onlineRelays.add(urlStr)
     relaysFound.set(onlineRelays.size)
-    onlineRelays.add(url)
   }
   
   if(!onlineRelays.size) {

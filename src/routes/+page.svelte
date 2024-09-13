@@ -165,7 +165,7 @@
                     })
                   }}>load</button
                 >
-              {:else if tryingFetching[r]}
+              {:else if tryingFetching[r] && r == 5}
                 <span class="my-2 px-2 py-1 rounded">
                   {$relaysFound}
                 </span>
