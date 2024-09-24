@@ -89,14 +89,12 @@
       tried[url] = true;
 
       try {
-        let to = 0;
         await Promise.race([
           pool.ensureRelay(url).then(async (relay) => { 
             await relay.publish(signedDeleteEvent)
             relay.close()
-            clearTimeout(to)
           }),
-          new Promise((_, reject) => to = setTimeout(() => reject('timed out'), 5000))
+          new Promise((_, reject) => setTimeout(() => reject('timed out'), 5000))
         ]);
         statuses[url] = true;
       } catch (err) {
