@@ -13,6 +13,11 @@
 
   import {relaysFound} from '../stores/relays-found';
 
+  /**/
+  const CONCURRENCY = 30;
+  const DELAY       = 1000;
+  /**/
+
   let pool = new SimplePool()
   let id: string | null = null
   let a: string | null = null
@@ -69,33 +74,48 @@
       created_at: Math.round(Date.now() / 1000),
       tags: [],
       kind: 5
-    }
+    };
 
     if (validId) {
-      deleteEvent.tags.push(['e', id as string])
+      deleteEvent.tags.push(['e', id as string]);
     } else if (a) {
-      deleteEvent.tags.push(['a', a])
-    } else return
+      deleteEvent.tags.push(['a', a]);
+    } else return;
 
-    let signedDeleteEvent: Event = await (window as any).nostr.signEvent(
-      deleteEvent
-    )
+    let signedDeleteEvent: Event = await (window as any).nostr.signEvent(deleteEvent);
 
-    for (let u = 0; u < relayGroups[r][1].length; u++) {
-      let url = relayGroups[r][1][u]
-      if (tried[url]) continue
+    const publishToRelay = async (url: string) => {
+      if (tried[url]) return;
+      tried[url] = true;
 
-      tried[url] = true
       try {
+        let to = 0;
         await Promise.race([
-          pool.ensureRelay(url).then(relay => relay.publish(signedDeleteEvent)),
-          new Promise((_, reject) =>
-            setTimeout(() => reject('timed out'), 3000)
-          )
-        ])
-        statuses[url] = true
+          pool.ensureRelay(url).then(async (relay) => { 
+            await relay.publish(signedDeleteEvent)
+            relay.close()
+            clearTimeout(to)
+          }),
+          new Promise((_, reject) => to = setTimeout(() => reject('timed out'), 5000))
+        ]);
+        statuses[url] = true;
       } catch (err) {
-        statuses[url] = err?.message ?? false
+        statuses[url] = err?.message ?? false;
+      }
+    };
+
+    const relayUrls = relayGroups[r][1];
+    const promises = [];
+
+    for (let u = 0; u < relayUrls.length; u++) {
+      let url = relayUrls[u];
+      promises.push(publishToRelay(url));
+
+      if (promises.length === CONCURRENCY || u === relayUrls.length - 1) {
+        await Promise.all(promises);
+        promises.length = 0;
+        pool.destroy();
+        await new Promise(resolve => setTimeout(resolve, DELAY));
       }
     }
   }
